@@ -1,6 +1,4 @@
-# notthebee/infra
-
-Superseded by [nix-config](https://github.com/notthebee/nix-config)
+# lukger/lukger-home
 
 Original README:
 ```
@@ -19,7 +17,7 @@ The playbook is mostly being developed for personal use, so stuff is going to be
 * Jake Howard and Alex Kretzschmar for the [snapraid](https://github.com/RealOrangeOne/ansible-role-snapraid/commits?author=IronicBadger) role
 
 ## Services included:
-* [Home Assistant](https://hub.docker.com/r/homeassistant/home-assistant) 
-* [Phoscon-GW](https://hub.docker.com/r/marthoc/deconz) 
-* [nginx-proxy-manager](https://nginxproxymanager.com/) 
+* [Home Assistant](https://hub.docker.com/r/homeassistant/home-assistant)
+* [Phoscon-GW](https://hub.docker.com/r/marthoc/deconz)
+* [nginx-proxy-manager](https://nginxproxymanager.com/)
 ```

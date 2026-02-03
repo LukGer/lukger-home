@@ -3,19 +3,19 @@
   set_fact:
     sudo_group: sudo
 
-- name: Ensure the necessary groupsexists
+- name: Ensure the necessary groups exists
   group:
     name: "{{ item }}"
     state: present
   loop:
       - "{{ username }}"
       - docker
-   
+
 - name: Create a login user
   user:
     name: "{{ username }}"
     password: "{{ password | password_hash('sha512') }}"
-    groups: 
+    groups:
       - "{{ sudo_group }}"
       - docker
       - users
@@ -39,14 +39,14 @@
     line: '%{{ sudo_group }} ALL=(ALL) NOPASSWD: ALL'
     validate: '/usr/sbin/visudo -cf %s'
 
-- name: Copy the public SSH key 
+- name: Copy the public SSH key
   authorized_key:
     user: "{{ username }}"
     state: present
     key: "{{ ssh_public_key }}"
 
 - name: Set the default shell
-  user: 
+  user:
     name: "{{ username }}"
     shell: "{{ shell }}"
 

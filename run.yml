@@ -22,10 +22,6 @@
         tags:
             - system
 
-      - role: neovim
-        tags:
-            - neovim
-
       - role: geerlingguy.security
         tags:
             - security
@@ -33,10 +29,6 @@
       - role: geerlingguy.docker
         tags:
             - docker
-
-      - role: chriswayg.msmtp-mailer
-        tags:
-            - msmtp
 
       - name: containers
         tags:
