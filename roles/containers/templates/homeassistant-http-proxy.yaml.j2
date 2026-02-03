@@ -1,0 +1,5 @@
+# ANSIBLE MANAGED - reverse proxy (Traefik)
+# Add to configuration.yaml under http: or include this file
+use_x_forwarded_for: true
+trusted_proxies:
+  - 172.16.0.0/12

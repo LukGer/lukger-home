@@ -1,0 +1,13 @@
+[Unit]
+Description=Avahi extra .local names
+After=avahi-daemon.service
+PartOf=avahi-daemon.service
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/avahi-extra-names.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

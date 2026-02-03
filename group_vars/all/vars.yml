@@ -3,6 +3,13 @@
 #
 hostname: '{{ inventory_hostname }}'
 
+# mDNS name for .local resolution (e.g. lukger → lukger.local)
+mdns_name: lukger
+
+# Extra .local names (same IP as host, e.g. for Docker apps)
+mdns_extra_hosts:
+  - homeassistant
+
 timezone: Europe/Vienna
 
 ntp_timezone: '{{ timezone }}'

@@ -9,6 +9,20 @@
     - "{{ docker_compose_dir }}"
     - "{{ docker_dir }}"
 
+- name: Ensure Traefik config directory exists
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/traefik"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    state: directory
+
+- name: Deploy Traefik dynamic config
+  ansible.builtin.template:
+    src: traefik-dynamic.yaml.j2
+    dest: "{{ docker_dir }}/traefik/dynamic.yaml"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
 - name: Copy the compose file
   template:
     src: templates/compose.yaml
@@ -16,6 +30,45 @@
   vars:
     app_cidr: "{{ (networks | selectattr('name', '==', 'app') | map(attribute='cidr') | first) | default('') }}"
     app_base: "{{ (networks | selectattr('name', '==', 'app') | map(attribute='base') | first) | default('') }}"
+
+- name: Deploy Home Assistant reverse-proxy snippet
+  ansible.builtin.template:
+    src: homeassistant-http-proxy.yaml.j2
+    dest: "{{ docker_dir }}/homeassistant/http_proxy.yaml"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+
+- name: Stat homeassistant configuration.yaml
+  ansible.builtin.stat:
+    path: "{{ docker_dir }}/homeassistant/configuration.yaml"
+  register: ha_config_stat
+
+- name: Ensure configuration.yaml exists
+  ansible.builtin.file:
+    path: "{{ docker_dir }}/homeassistant/configuration.yaml"
+    state: touch
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Remove stray http_proxy includes (cleanup)
+  ansible.builtin.lineinfile:
+    path: "{{ docker_dir }}/homeassistant/configuration.yaml"
+    regexp: "^\\s*!include http_proxy\\.yaml"
+    state: absent
+
+- name: Remove duplicate http lines
+  ansible.builtin.shell: |
+    sed -i '/^http:.*http_proxy/d' "{{ docker_dir }}/homeassistant/configuration.yaml"
+  changed_when: false
+
+- name: Ensure exactly one http include in configuration.yaml
+  ansible.builtin.lineinfile:
+    path: "{{ docker_dir }}/homeassistant/configuration.yaml"
+    regexp: "^http:.*http_proxy"
+    line: "http: !include http_proxy.yaml"
+  notify: restart homeassistant
 
 - name: Docker-compose up
   community.docker.docker_compose_v2:

@@ -1,4 +1,3 @@
-{% if not app_cidr == "" %}
 networks:
   app:
     driver: macvlan
@@ -7,25 +6,32 @@ networks:
     ipam:
       config:
         - subnet: {{ app_cidr }}
-{% endif %}
+  proxy:
+    driver: bridge
 
 services:
-{% if "homeassistant" in services %}
+  traefik:
+    image: traefik:v3.2
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "{{ docker_dir }}/traefik:/etc/traefik/dynamic:ro"
+    networks:
+      - proxy
+    command:
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --entrypoints.web.address=:80
+
   homeassistant:
     container_name: homeassistant
     image: homeassistant/home-assistant:stable
-{% if not app_cidr == "" %}
-    networks:
-      app:
-        ipv4_address: {{ app_base }}.18
-{% else %}
-    ports:
-      - "8123:8123"
-{% endif %}
+    network_mode: host
     restart: always
     volumes:
       - "{{ docker_dir }}/homeassistant:/config"
     environment:
       - TZ={{ timezone }}
-{% endif %}
-

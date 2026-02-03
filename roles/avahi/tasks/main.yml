@@ -1,0 +1,56 @@
+---
+- name: Install avahi-daemon and avahi-utils
+  ansible.builtin.apt:
+    name:
+      - avahi-daemon
+      - avahi-utils
+    state: present
+
+- name: Set mDNS host-name for .local resolution
+  ansible.builtin.lineinfile:
+    path: /etc/avahi/avahi-daemon.conf
+    regexp: '^#?host-name='
+    line: "host-name={{ mdns_name }}"
+    insertafter: '^\[server\]'
+    firstmatch: yes
+  notify: restart avahi-daemon
+
+- name: Add mDNS host-name if missing (e.g. no existing host-name line)
+  ansible.builtin.lineinfile:
+    path: /etc/avahi/avahi-daemon.conf
+    line: "host-name={{ mdns_name }}"
+    insertafter: '^\[server\]'
+    firstmatch: yes
+  notify: restart avahi-daemon
+
+- name: Ensure avahi-daemon is running
+  ansible.builtin.service:
+    name: avahi-daemon
+    state: started
+    enabled: yes
+
+- name: Allow mDNS (UDP 5353) for Avahi
+  ansible.builtin.command: ufw allow 5353/udp comment "Avahi mDNS"
+  changed_when: true
+  when: ansible_facts.packages is defined and 'ufw' in (ansible_facts.packages | default({}))
+
+- name: Deploy avahi extra-names script
+  ansible.builtin.template:
+    src: avahi-extra-names.sh.j2
+    dest: /usr/local/bin/avahi-extra-names.sh
+    mode: '0755'
+  when: mdns_extra_hosts | default([]) | length > 0
+
+- name: Deploy avahi extra-names systemd service
+  ansible.builtin.template:
+    src: avahi-extra-names.service.j2
+    dest: /etc/systemd/system/avahi-extra-names.service
+  when: mdns_extra_hosts | default([]) | length > 0
+
+- name: Enable and start avahi extra-names service
+  ansible.builtin.systemd:
+    name: avahi-extra-names
+    daemon_reload: yes
+    state: started
+    enabled: yes
+  when: mdns_extra_hosts | default([]) | length > 0

@@ -1,0 +1,5 @@
+---
+- name: restart avahi-daemon
+  ansible.builtin.service:
+    name: avahi-daemon
+    state: restarted

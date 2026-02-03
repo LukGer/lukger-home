@@ -1,0 +1,7 @@
+#!/bin/bash
+# Published by Ansible – extra mDNS names for this host
+IP="{{ ansible_default_ipv4.address }}"
+{% for name in mdns_extra_hosts %}
+/usr/bin/avahi-publish -a -R {{ name }}.local "$IP" &
+{% endfor %}
+wait

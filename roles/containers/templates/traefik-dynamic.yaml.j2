@@ -1,0 +1,14 @@
+# Backend: homeassistant on host network (host.docker.internal = host from container)
+http:
+  routers:
+    homeassistant:
+      rule: "Host(`homeassistant.local`)"
+      service: homeassistant
+      entryPoints:
+        - web
+  services:
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8123"
+        passHostHeader: true

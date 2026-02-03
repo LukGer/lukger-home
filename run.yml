@@ -22,6 +22,10 @@
         tags:
             - system
 
+      - role: avahi
+        tags:
+            - avahi
+
       - role: geerlingguy.security
         tags:
             - security
