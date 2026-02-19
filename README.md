@@ -6,3 +6,5 @@ This repository now keeps the infrastructure automation under `infra/`.
 - `README.md` (this file): points to the current layout so you know where the code lives.
 
 Whenever you ask me to build a new little project for the home server, I will place it somewhere sensible inside `infra/` and open a PR for your review.
+
+This small edit proves the bot user can push updates and raise PRs—feel free to revert after the test.
