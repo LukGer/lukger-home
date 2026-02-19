@@ -20,24 +20,23 @@ Use this skill whenever Lukas asks for help organising a real-life meetup-"meet 
    - Arrival time (target when Lukas wants to be there; parse into ISO or HH:MM for the current day).
    - Origin (default to home but ask if he meant somewhere else or is already "at" a place). For future flexibility, store his home address in memory.
    - Mode of transport (default to public transport unless he explicitly says drive/walk/bike).
-   - Any safety buffer he wants (5 min default before the transit/drive start).
+   - Any safety buffer he wants (5 min default before the transit/drive start).
 
 2. **Run the helper script.** Use `scripts/meetup.py` with the gathered inputs (destination, arrival time, origin, mode, buffer) to fetch the current route from the Google Directions API. The script returns:
    - Travel duration in minutes
-   - The moment he should leave (arrival minus duration minus buffer)
-   - Step-by-step instructions for the first leg(s)
-   - Which line/stop the reminder references when public transit is in use
+   - The departure moment (arrival minus duration minus buffer) in Lukas's local timezone, plus the UTC equivalent for scheduling
+   - Step-by-step instructions for the first leg(s), including any transit lines/stops
+   - First-leg instructions suitable for the reminder message
 
-3. **Review the suggested plan with Lukas.** Share:
-   - Calculated departure time and buffer
-   - Expected total travel duration
-   - First departure (tram/bus stop, driving directions) so he knows what to expect
-   - Mention that the reminder will arrive ~5 minutes before he must leave (or whatever buffer he asked for)
+3. **Review the suggested plan with Lukas.** Share the key facts in plain language:
+   - "Leave at 19:40 (Europe/Vienna) via transit to reach Hauptplatz Linz by 20:00; travel takes ≈14 min."
+   - Mention that the reminder will arrive about 5 minutes before the computed leave time.
+   - *Avoid extra verbosity*-do not include the cron job ID or raw JSON output in this message.
 
 4. **Schedule the reminder.** When Lukas approves the plan:
-   - Use the `cron` tool (see documentation) to add a job firing at the computed leave time.
-   - The reminder payload should mention: "Leave now for <destination> via <mode>; it takes ~<duration> and you should catch <next transit info>". Include the first action (e.g., "Walk to the tram stop at Linz Hauptplatz, catch tram 2 towards Leonding West").
-   - Store the job ID or description in conversation memory if follow-up/cancellation might happen soon.
+   - Use the `cron` tool (see documentation) to add a job firing at the computed leave time (convert the local departure time to UTC for the job schedule).
+   - The reminder payload should mention: "Leave now for <destination> via <mode>; it takes ~<duration> and you should catch <next transit info>." Include the first action (e.g., "Walk to the tram stop at Linz Hauptplatz, catch tram 2 towards Leonding West").
+   - Note the reminder in a short memory field if Lukas may need to cancel or adjust it soon, but do not share the job ID in conversation.
 
 5. **Handle follow-ups.** Lukas might later ask "cancel that reminder", "I changed my mind to drive", or "update the meetup to 19:30". Re-run the script with the new parameters, cancel the old cron job if needed, and schedule a new reminder.
 
@@ -60,7 +59,8 @@ The script lives inside this skill. It exposes a command-line interface so Codex
    ```json
    {
      "google_maps_api_key": "<your key>",
-     "home_address": "<Lukas' home address>"
+     "home_address": "<Lukas' home address>",
+     "timezone": "Europe/Vienna"  # optional, defaults to Europe/Vienna if omitted
    }
    ```
 2. If you keep your config elsewhere, point the script to it via `MEETUP_SCHEDULER_CONFIG=/path/to/private_config.json python ...`.
