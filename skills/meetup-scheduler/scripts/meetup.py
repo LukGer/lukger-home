@@ -13,11 +13,13 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 CONFIG_ENV_VAR = "MEETUP_SCHEDULER_CONFIG"
 DEFAULT_CONFIG = Path(__file__).resolve().parents[2] / "private_config.json"
+DEFAULT_TIMEZONE = "Europe/Vienna"
 
 API_URL = "https://maps.googleapis.com/maps/api/directions/json"
 
@@ -36,15 +38,15 @@ def load_config(path=None):
     return data
 
 
-def parse_arrival(raw: str) -> datetime:
+def parse_arrival(raw: str, tz: ZoneInfo) -> datetime:
     text = raw.strip()
     for fmt in ("%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M", "%H:%M"):
         try:
             parsed = datetime.strptime(text, fmt)
             if fmt == "%H:%M":
-                today = date.today()
-                return datetime.combine(today, parsed.time())
-            return parsed
+                today = datetime.now(tz).date()
+                parsed = datetime.combine(today, parsed.time())
+            return parsed.replace(tzinfo=tz)
         except ValueError:
             continue
     raise MeetupSchedulerError(f"could not parse arrival time: {raw}")
@@ -101,7 +103,8 @@ def summarize_leg(leg):
 def plan_trip(destination, arrival, origin=None, mode="transit", buffer_minutes=5, config=None):
     config = config or load_config()
     origin = origin or config["home_address"]
-    arrival_dt = parse_arrival(arrival)
+    tz = ZoneInfo(config.get("timezone", DEFAULT_TIMEZONE))
+    arrival_dt = parse_arrival(arrival, tz)
     arrival_ts = int(arrival_dt.timestamp())
     route = fetch_directions(origin, destination, mode, arrival_ts, config["google_maps_api_key"])
     leg = route.get("legs", [])[0]
@@ -113,9 +116,13 @@ def plan_trip(destination, arrival, origin=None, mode="transit", buffer_minutes=
         "destination": destination,
         "mode": mode,
         "arrival_time": arrival_dt.isoformat(sep=" "),
+        "arrival_time_local": arrival_dt.strftime("%H:%M"),
         "buffer_minutes": buffer_minutes,
         "travel_minutes": round(travel_seconds / 60) if travel_seconds else None,
         "departure_time": leave_dt.isoformat(sep=" "),
+        "departure_time_utc": leave_dt.astimezone(timezone.utc).isoformat(),
+        "departure_time_local": leave_dt.strftime("%H:%M"),
+        "local_timezone": tz.key,
         "summary": summary,
     }
     return payload
@@ -125,11 +132,11 @@ def format_payload(payload):
     lines = [
         f"origin: {payload['origin']}",
         f"destination: {payload['destination']}",
-        f"arrival: {payload['arrival_time']}",
+        f"arrival: {payload['arrival_time']} ({payload['local_timezone']})",
         f"mode: {payload['mode']}",
         f"buffer: {payload['buffer_minutes']} min",
         f"travel: {payload['travel_minutes']} min",
-        f"leave at: {payload['departure_time']}",
+        f"leave at: {payload['departure_time']}"
     ]
     summary = payload["summary"]
     if summary["summary"]:
@@ -144,6 +151,14 @@ def format_payload(payload):
     return "\n".join(lines)
 
 
+def format_brief(payload):
+    return (
+        f"Leave at {payload['departure_time_local']} ({payload['local_timezone']}) "
+        f"via {payload['mode']} to reach {payload['destination']} by {payload['arrival_time_local']} "
+        f"(≈{payload['travel_minutes']} min)."
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch travel data for meetups")
     parser.add_argument("--destination", required=True, help="Where Lukas wants to go")
@@ -152,6 +167,7 @@ def main():
     parser.add_argument("--mode", choices=["transit", "driving", "walking", "bicycling"], default="transit")
     parser.add_argument("--buffer", type=int, default=5, help="Minutes of buffer before travel begins")
     parser.add_argument("--json", action="store_true", help="Print JSON instead of human summary")
+    parser.add_argument("--brief", action="store_true", help="Print a short human-friendly summary")
     args = parser.parse_args()
 
     try:
@@ -167,6 +183,8 @@ def main():
 
     if args.json:
         print(json.dumps(payload, indent=2))
+    elif args.brief:
+        print(format_brief(payload))
     else:
         print(format_payload(payload))
 
