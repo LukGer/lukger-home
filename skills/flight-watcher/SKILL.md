@@ -1,31 +1,31 @@
 ---
 name: flight-watcher
-description: "Daily flight scouting for Vienna → Tokyo (Haneda/Narita) via Kiwi Tequila, filtering layovers and carriers."
+description: "Daily flight scouting for Vienna → Tokyo (Haneda/Narita) via the RapidAPI Kiwi.com Cheap Flights round-trip search."
 ---
 
 ## Purpose
 
-This skill tracks Vienna → Tokyo roundtrips (depart 10 Sep, return 1 Oct, up to 1 stop, layovers under 5 h, no major Chinese carriers). It calls Kiwi’s Tequila flight search API and summarizes the top three itineraries plus whether the best price changed.
+This skill tracks Vienna → Tokyo roundtrips (depart 10 Sep, return 1 Oct, up to 1 stop, layovers under 5 h, no major Chinese carriers) and pushes the top three itineraries into the Telegram group. It now talks to the RapidAPI “Kiwi.com Cheap Flights” round-trip endpoint instead of Tequila so we can keep the daily noon summary alive.
 
 ## Helper script
 
 - `scripts/monitor_flights.py`:
-  1. Reads `tequila_api_key` from `private_config.json` (you still keep all secrets out of git).
-  2. Queries `https://tequila-api.kiwi.com/v2/search` for both Haneda and Narita.
-  3. Filters results for `max_stopovers=1`, layovers <= 5 h, and excludes Chinese carriers (CA, MU, CZ, HU, ZH, FM, NX, KN, EY).
-  4. Prints a note on the best price (new vs unchanged) plus the formatted top three itineraries (each lists price, airline legs, layovers).
-  5. Stores the best price in `~/.openclaw/workspace/.flight_watcher_state.json` so the next run can mention “No change.”
+  1. Reads `rapidapi_key` from `private_config.json` and targets the RapidAPI host `kiwi-com-cheap-flights.p.rapidapi.com`.
+  2. Calls `https://kiwi-com-cheap-flights.p.rapidapi.com/round-trip` twice (Haneda and Narita) with the September 10 → October 1 roundtrip parameters + the filters/flags the previous Tequila version used.
+  3. Parses each itinerary, rejects routes with excluded carriers (CA, MU, CZ, HU, ZH, FM, NX, KN, EY) or layovers longer than 5 h, and keeps the best offers for summary.
+  4. Prints the best-price note (new vs. unchanged) and the top three itineraries (price, total max layover, outbound/inbound legs with times) just like before.
+  5. Saves the latest best price in `~/.openclaw/workspace/.flight_watcher_state.json` so the output can still report “No change.”
 
-If the Tequila API request fails (e.g., due to missing key), the script exits with an error message so the cron job can report it.
+If the RapidAPI call fails (e.g., due to a missing key), the script exits with an error message so the cron job can report it.
 
 ## Configuration
 
-1. Grab a Kiwi Tequila API key at https://tequila.kiwi.com/portal/sign-up (if you can’t find the signup button, use the “Try Tequila for free” flow after logging in at kiwi.com). Store it in `~/.openclaw/workspace/private_config.json` as `"tequila_api_key": "<your key>"`.
-2. The script uses your existing `rapidapi_key` (if you ever want to switch to the RapidAPI wrapper) but relies on `tequila_api_key` for now.
+1. Add your RapidAPI key to `~/.openclaw/workspace/private_config.json` under `"rapidapi_key": "<your key>"`.
+2. Confirm the key has access to the `kiwi-com-cheap-flights.p.rapidapi.com` API (the “Round trip” endpoint, `GET /round-trip`).
 
 ## Automation
 
-Create a cron job to run the helper every day around noon (Europe/Vienna) and deliver the text directly into this Telegram chat:
+(The cron payload below already targets the updated script.)
 
 ```
 openclaw cron add \
@@ -35,4 +35,4 @@ openclaw cron add \
   --payload '{"kind":"agentTurn","message":"Run skills/flight-watcher/scripts/monitor_flights.py and post its stdout verbatim into the group so I get the latest top 3 itineraries and notes on whether the price changed.","model":"openai-codex/gpt-5.1-codex-mini"}'
 ```
 
-The helper prints a multi-line summary that is sent exactly as-is, so you see the best options and know if there’s a new record low. Adjust the script if you want to include more destinations or different dates.
+The helper still prints the same structured summary, and the cron job delivers it directly into the Telegram group so you see the best options and whether the price moved.

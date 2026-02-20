@@ -12,11 +12,16 @@ from typing import Iterable, List, Mapping, Optional, Sequence, Tuple
 
 WORKSPACE = Path.home() / ".openclaw" / "workspace"
 CONFIG_PATH = WORKSPACE / "private_config.json"
-API_URL = "https://tequila-api.kiwi.com/v2/search"
+API_URL = "https://kiwi-com-cheap-flights.p.rapidapi.com/round-trip"
+API_HOST = "kiwi-com-cheap-flights.p.rapidapi.com"
 EXCLUDED_CARRIERS = {"CA", "MU", "CZ", "HU", "ZH", "FM", "NX", "KN", "EY"}
 
 STATE_FILE = WORKSPACE / ".flight_watcher_state.json"
 CACHE_LIMIT = 10
+SOURCE = "Airport:VIE"
+DESTINATIONS = ("Airport:HND", "Airport:NRT")
+OUTBOUND_DATE = "2026-09-10"
+INBOUND_DATE = "2026-10-01"
 
 
 @dataclass
@@ -42,47 +47,85 @@ def load_config() -> Mapping:
     if not CONFIG_PATH.exists():
         raise FileNotFoundError("private_config.json not found; cannot run flight watcher")
     data = json.loads(CONFIG_PATH.read_text())
-    if "tequila_api_key" not in data or not data["tequila_api_key"]:
-        raise KeyError("tequila_api_key missing from private_config.json; please add your Tequila API key")
+    if "rapidapi_key" not in data or not data["rapidapi_key"]:
+        raise KeyError("rapidapi_key missing from private_config.json; please add your RapidAPI key")
     return data
 
 
 def call_api(destination: str, api_key: str) -> Sequence[Mapping]:
     params = {
-        "fly_from": "VIE",
-        "fly_to": destination,
-        "date_from": "10/09/2026",
-        "date_to": "10/09/2026",
-        "return_from": "01/10/2026",
-        "return_to": "01/10/2026",
-        "curr": "EUR",
+        "source": SOURCE,
+        "destination": destination,
+        "currency": "EUR",
+        "locale": "en",
+        "adults": 1,
+        "children": 0,
+        "infants": 0,
+        "handbags": 1,
+        "holdbags": 0,
+        "cabinClass": "ECONOMY",
+        "sortBy": "QUALITY",
+        "sortOrder": "ASCENDING",
+        "applyMixedClasses": "true",
+        "allowReturnFromDifferentCity": "true",
+        "allowChangeInboundDestination": "true",
+        "allowChangeInboundSource": "true",
+        "allowDifferentStationConnection": "true",
+        "enableSelfTransfer": "true",
+        "allowOvernightStopover": "true",
+        "enableTrueHiddenCity": "true",
+        "enableThrowAwayTicketing": "true",
+        "transportTypes": "FLIGHT",
+        "contentProviders": "KIWI",
+        "outboundDepartmentDateStart": OUTBOUND_DATE,
+        "outboundDepartmentDateEnd": OUTBOUND_DATE,
+        "inboundDepartmentDateStart": INBOUND_DATE,
+        "inboundDepartmentDateEnd": INBOUND_DATE,
         "limit": CACHE_LIMIT,
-        "sort": "price",
-        "max_stopovers": 1,
     }
     url = f"{API_URL}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url)
-    request.add_header("apikey", api_key)
+    request.add_header("X-RapidAPI-Key", api_key)
+    request.add_header("X-RapidAPI-Host", API_HOST)
     request.add_header("Accept", "application/json")
     with urllib.request.urlopen(request, timeout=30) as response:
         payload = json.load(response)
-    return payload.get("data", [])
+    return payload.get("itineraries", [])
 
 
-def parse_route(entry: Mapping) -> List[RouteSegment]:
-    segments = []
-    for segment in entry.get("route", []):
+def collect_segments(sector: Mapping, return_flag: int) -> List[RouteSegment]:
+    segments: List[RouteSegment] = []
+    for entry in sector.get("sectorSegments", []):
+        segment = entry.get("segment", {})
+        source = segment.get("source", {})
+        destination = segment.get("destination", {})
+        airline = segment.get("carrier", {}).get("code", "")
+        city_from = source.get("city", {}).get("name", "")
+        city_to = destination.get("city", {}).get("name", "")
+        local_departure = source.get("localTime", "")
+        local_arrival = destination.get("localTime", "")
+        if not airline or not city_from or not city_to or not local_departure or not local_arrival:
+            continue
         segments.append(
             RouteSegment(
-                airline=segment.get("airline", ""),
-                city_from=segment.get("cityFrom", ""),
-                city_to=segment.get("cityTo", ""),
-                local_departure=segment.get("local_departure", ""),
-                local_arrival=segment.get("local_arrival", ""),
-                return_flag=segment.get("return", 0),
+                airline=airline,
+                city_from=city_from,
+                city_to=city_to,
+                local_departure=local_departure,
+                local_arrival=local_arrival,
+                return_flag=return_flag,
             )
         )
     return segments
+
+
+def parse_itinerary(entry: Mapping) -> List[RouteSegment]:
+    route = []
+    outbound = entry.get("outbound", {})
+    inbound = entry.get("inbound", {})
+    route.extend(collect_segments(outbound, 0))
+    route.extend(collect_segments(inbound, 1))
+    return route
 
 
 def max_layover(route: Sequence[RouteSegment]) -> float:
@@ -104,13 +147,13 @@ def max_layover(route: Sequence[RouteSegment]) -> float:
 
 
 def filter_offers(entries: Iterable[Mapping]) -> List[FlightOffer]:
-    offers = []
+    offers: List[FlightOffer] = []
     for entry in entries:
-        price = entry.get("price")
-        currency = entry.get("currency", "EUR")
+        price_data = entry.get("price", {})
+        price = price_data.get("amount")
         if not price:
             continue
-        route = parse_route(entry)
+        route = parse_itinerary(entry)
         if not route:
             continue
         if any(seg.airline in EXCLUDED_CARRIERS for seg in route):
@@ -118,11 +161,11 @@ def filter_offers(entries: Iterable[Mapping]) -> List[FlightOffer]:
         layover_min = max_layover(route)
         if layover_min > 300:
             continue
-        destination = route[-1].city_to or entry.get("flyTo", "")
+        destination = route[-1].city_to
         offers.append(
             FlightOffer(
                 price=float(price),
-                currency=currency,
+                currency="EUR",
                 route=route,
                 layover_minutes=layover_min,
                 destination=destination,
@@ -164,11 +207,11 @@ def save_state(state: Mapping[str, float]) -> None:
 
 
 def collect_offers(api_key: str) -> List[FlightOffer]:
-    results = []
-    for destination in ("HND", "NRT"):
+    results: List[FlightOffer] = []
+    for destination in DESTINATIONS:
         entries = call_api(destination, api_key)
         results.extend(filter_offers(entries))
-    return results[:10]
+    return results[:CACHE_LIMIT]
 
 
 def main() -> int:
