@@ -68,17 +68,31 @@ openclaw_config_dir: "{{ openclaw_home }}/.openclaw"
 openclaw_config_path: "{{ openclaw_config_dir }}/openclaw.json"
 openclaw_state_dir: "{{ openclaw_config_dir }}"
 openclaw_workspace_dir: "{{ openclaw_config_dir }}/workspace"
-openclaw_bin_path: /usr/local/bin/openclaw
 openclaw_gateway_port: 18789
 openclaw_gateway_bind: loopback
 openclaw_update_channel: beta
 openclaw_model_primary: openai-codex/gpt-5.2-codex
-openclaw_telegram_enabled: true
 openclaw_gateway_token: "{{ vault_openclaw_gateway_token }}"
 openclaw_telegram_bot_token: "{{ vault_openclaw_telegram_bot_token | default('') }}"
 # Skills to install from repo (relative to infra/)
 openclaw_skills_src_dir: "{{ playbook_dir }}/../skills"
-openclaw_skills: []
+openclaw_skills:
+  - meetup-scheduler
+  - blogwatcher
+  - gog
+
+# Env vars for skills (API keys, config paths, etc.)
+openclaw_skills_env:
+  MEETUP_SCHEDULER_CONFIG: "{{ openclaw_workspace_dir }}/private_config.json"
+  # GOG_ACCOUNT: "{{ vault_gog_account }}"  # uncomment if using gog
+
+# Per-skill config files: path + template (secrets from secret.yml)
+openclaw_skill_configs:
+  meetup-scheduler:
+    path: "{{ openclaw_workspace_dir }}/private_config.json"
+    template: skill-configs/meetup-scheduler-private_config.json.j2
+
+openclaw_meetup_scheduler_timezone: "{{ timezone }}"
 
 #
 # Packages

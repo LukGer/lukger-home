@@ -49,22 +49,13 @@ The script lives inside this skill. It exposes a command-line interface so Codex
 - **Inputs**: `--destination`, `--arrival` (ISO or HH:MM), optional `--origin`, `--mode` (`transit, driving, walking, bicycling`), `--buffer` (minutes before departure), `--json` (print machine-readable data).
 - **Outputs**: JSON summarising travel duration, computed departure time, and first-leg instructions. The CLI also pretty-prints the details if `--json` is omitted.
 - **Implementation notes**:
-  - It reads `google_maps_api_key` and `home_address` from `private_config.json` (see Configuration). This keeps secrets outside the repo.
+  - It reads `google_maps_api_key` and `home_address` from the provisioned config (see Configuration).
   - It defaults to transit/rides from home when the corresponding arguments aren't present.
   - It uses standard library `urllib` so no extra dependencies are needed.
 
 ## Configuration
 
-1. Create (or update) a `private_config.json` in the repo root (not checked in). It must contain:
-   ```json
-   {
-     "google_maps_api_key": "<your key>",
-     "home_address": "<Lukas' home address>",
-     "timezone": "Europe/Vienna"  # optional, defaults to Europe/Vienna if omitted
-   }
-   ```
-2. If you keep your config elsewhere, point the script to it via `MEETUP_SCHEDULER_CONFIG=/path/to/private_config.json python ...`.
-3. Keep the API key secret; only store it in private files or environment variables.
+Config is provisioned by Ansible from Vault (`vault_openclaw_meetup_scheduler_google_maps_api_key`, `vault_openclaw_meetup_scheduler_home_address` in `infra/group_vars/all/secret.yml`). The gateway sets `MEETUP_SCHEDULER_CONFIG` to the deployed config path.
 
 ## Reminder Cadence
 

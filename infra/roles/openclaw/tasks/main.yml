@@ -59,6 +59,17 @@
   when: openclaw_skills | length > 0
   notify: restart openclaw
 
+- name: Deploy skill config files
+  ansible.builtin.template:
+    src: "{{ item.value.template }}"
+    dest: "{{ item.value.path }}"
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: '0600'
+  loop: "{{ openclaw_skill_configs | dict2items }}"
+  when: openclaw_skill_configs | length > 0
+  notify: restart openclaw
+
 - name: Install systemd unit
   ansible.builtin.template:
     src: openclaw-gateway.service.j2

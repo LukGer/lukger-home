@@ -9,6 +9,9 @@ User={{ openclaw_user }}
 Group={{ openclaw_group }}
 Environment=OPENCLAW_CONFIG_PATH={{ openclaw_config_path }}
 Environment=OPENCLAW_STATE_DIR={{ openclaw_state_dir }}
+{% for k, v in openclaw_skills_env.items() %}
+Environment={{ k }}={{ v }}
+{% endfor %}
 WorkingDirectory={{ openclaw_home }}
 ExecStart={{ openclaw_bin_path }} gateway --port {{ openclaw_gateway_port }}
 Restart=always

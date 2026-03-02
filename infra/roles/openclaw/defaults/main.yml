@@ -17,3 +17,7 @@ openclaw_telegram_bot_token: ""
 # Skills
 openclaw_skills_src_dir: "{{ playbook_dir }}/../skills"
 openclaw_skills: []
+# Env vars for skill execution (API keys, etc.)
+openclaw_skills_env: {}
+# Per-skill config files: skill_name -> { path, template }
+openclaw_skill_configs: {}
