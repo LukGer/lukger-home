@@ -84,13 +84,17 @@ openclaw_skills:
 # Env vars for skills (API keys, config paths, etc.)
 openclaw_skills_env:
   MEETUP_SCHEDULER_CONFIG: "{{ openclaw_workspace_dir }}/private_config.json"
-  # GOG_ACCOUNT: "{{ vault_gog_account }}"  # uncomment if using gog
+  GOG_ACCOUNT: "{{ vault_openclaw_gog_account }}"
+  GOG_KEYRING_PASSWORD: "{{ vault_openclaw_gog_keyring_password }}"
 
 # Per-skill config files: path + template (secrets from secret.yml)
 openclaw_skill_configs:
   meetup-scheduler:
     path: "{{ openclaw_workspace_dir }}/private_config.json"
     template: skill-configs/meetup-scheduler-private_config.json.j2
+
+# gog: vault-encrypted JSON file (ansible-vault encrypt infra/auth/client_secret.json)
+openclaw_gog_credentials_src: "{{ playbook_dir }}/auth/client_secret.json"
 
 openclaw_meetup_scheduler_timezone: "{{ timezone }}"
 

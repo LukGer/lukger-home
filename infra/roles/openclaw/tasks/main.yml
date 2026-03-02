@@ -38,6 +38,7 @@
     - "{{ openclaw_config_dir }}"
     - "{{ openclaw_workspace_dir }}"
     - "{{ openclaw_workspace_dir }}/skills"
+    - "{{ openclaw_home }}/.config/gogcli"
 
 - name: Deploy OpenClaw config
   ansible.builtin.template:
@@ -68,6 +69,15 @@
     mode: '0600'
   loop: "{{ openclaw_skill_configs | dict2items }}"
   when: openclaw_skill_configs | length > 0
+  notify: restart openclaw
+
+- name: Deploy gog credentials (vault-encrypted file)
+  ansible.builtin.copy:
+    src: "{{ openclaw_gog_credentials_src }}"
+    dest: "{{ openclaw_home }}/.config/gogcli/credentials.json"
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: '0600'
   notify: restart openclaw
 
 - name: Install systemd unit

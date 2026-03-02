@@ -9,7 +9,11 @@ metadata: {"clawdbot":{"emoji":"🎮","requires":{"bins":["gog"]},"install":[{"i
 
 Use `gog` for Gmail/Calendar/Drive/Contacts/Sheets/Docs. Requires OAuth setup.
 
-Setup (once)
+## Configuration
+
+Store `client_secret.json` in `infra/auth/`, run `ansible-vault encrypt infra/auth/client_secret.json`, then Ansible deploys it to `~/.config/gogcli/credentials.json`. Vault vars `vault_openclaw_gog_account` and `vault_openclaw_gog_keyring_password` set env for the gateway. Run `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs --manual --force-consent` once on the host.
+
+## Setup (once)
 - `gog auth credentials /path/to/client_secret.json`
 - `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs`
 - `gog auth list`
