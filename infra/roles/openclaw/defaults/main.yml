@@ -11,7 +11,6 @@ openclaw_gateway_port: 18789
 openclaw_gateway_bind: loopback
 openclaw_update_channel: beta
 openclaw_model_primary: openai-codex/gpt-5.2-codex
-openclaw_telegram_enabled: false
 openclaw_gateway_token: ""
 openclaw_telegram_bot_token: ""
 # Skills

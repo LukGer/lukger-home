@@ -37,7 +37,7 @@
       "mode": "off",
       "resetOnExit": false
     }
-  }{% if openclaw_telegram_enabled %},
+  },
   "channels": {
     "telegram": {
       "enabled": true,
@@ -51,5 +51,25 @@
       "groupPolicy": "allowlist",
       "streaming": "partial"
     }
-  }{% endif %}
+  },
+  "memory": {
+    "backend": "qmd",
+    "qmd": {
+      "scope": {
+        "default": "allow"
+      }
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "bun"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
 }
