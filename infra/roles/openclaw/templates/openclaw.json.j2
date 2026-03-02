@@ -1,0 +1,55 @@
+{
+  "update": {
+    "channel": "{{ openclaw_update_channel }}"
+  },
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "{{ openclaw_model_primary }}"
+      },
+      "workspace": "{{ openclaw_workspace_dir }}",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "gateway": {
+    "port": {{ openclaw_gateway_port }},
+    "mode": "local",
+    "bind": "{{ openclaw_gateway_bind }}",
+    "auth": {
+      "mode": "token",
+      "token": "{{ openclaw_gateway_token }}"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  }{% if openclaw_telegram_enabled %},
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "botToken": "{{ openclaw_telegram_bot_token }}",
+      "groups": {
+        "*": {
+          "requireMention": false
+        }
+      },
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  }{% endif %}
+}

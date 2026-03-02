@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenClaw Gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ openclaw_user }}
+Group={{ openclaw_group }}
+Environment=OPENCLAW_CONFIG_PATH={{ openclaw_config_path }}
+Environment=OPENCLAW_STATE_DIR={{ openclaw_state_dir }}
+WorkingDirectory={{ openclaw_home }}
+ExecStart={{ openclaw_bin_path }} gateway --port {{ openclaw_gateway_port }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
