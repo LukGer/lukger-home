@@ -1,0 +1,19 @@
+---
+openclaw_user: openclaw
+openclaw_group: openclaw
+openclaw_home: /home/openclaw
+openclaw_config_dir: "{{ openclaw_home }}/.openclaw"
+openclaw_config_path: "{{ openclaw_config_dir }}/openclaw.json"
+openclaw_state_dir: "{{ openclaw_config_dir }}"
+openclaw_workspace_dir: "{{ openclaw_config_dir }}/workspace"
+openclaw_bin_path: /usr/local/bin/openclaw
+openclaw_gateway_port: 18789
+openclaw_gateway_bind: loopback
+openclaw_update_channel: beta
+openclaw_model_primary: openai-codex/gpt-5.2-codex
+openclaw_telegram_enabled: false
+openclaw_gateway_token: ""
+openclaw_telegram_bot_token: ""
+# Skills
+openclaw_skills_src_dir: "{{ playbook_dir }}/../skills"
+openclaw_skills: []

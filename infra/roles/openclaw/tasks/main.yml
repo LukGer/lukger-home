@@ -1,0 +1,92 @@
+---
+- name: Ensure OpenClaw group exists
+  ansible.builtin.group:
+    name: "{{ openclaw_group }}"
+    state: present
+
+- name: Ensure OpenClaw user exists
+  ansible.builtin.user:
+    name: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    home: "{{ openclaw_home }}"
+    create_home: true
+    shell: /usr/sbin/nologin
+    system: true
+
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Add NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /etc/apt/keyrings/nodesource.gpg
+    mode: '0644'
+
+- name: Add NodeSource repo (Node.js 22)
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main"
+    state: present
+    filename: nodesource
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Install OpenClaw CLI
+  ansible.builtin.npm:
+    name: openclaw
+    global: true
+    state: latest
+
+- name: Ensure OpenClaw config and workspace dirs exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: '0755'
+  loop:
+    - "{{ openclaw_config_dir }}"
+    - "{{ openclaw_workspace_dir }}"
+    - "{{ openclaw_workspace_dir }}/skills"
+
+- name: Deploy OpenClaw config
+  ansible.builtin.template:
+    src: openclaw.json.j2
+    dest: "{{ openclaw_config_path }}"
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: '0644'
+  notify: restart openclaw
+
+- name: Install custom skills
+  ansible.builtin.copy:
+    src: "{{ openclaw_skills_src_dir }}/{{ item }}"
+    dest: "{{ openclaw_workspace_dir }}/skills/{{ item }}"
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: '0755'
+  loop: "{{ openclaw_skills }}"
+  when: openclaw_skills | length > 0
+  notify: restart openclaw
+
+- name: Install systemd unit
+  ansible.builtin.template:
+    src: openclaw-gateway.service.j2
+    dest: /etc/systemd/system/openclaw-gateway.service
+    mode: '0644'
+  notify: reload systemd
+
+- name: Enable and start OpenClaw
+  ansible.builtin.systemd:
+    name: openclaw-gateway
+    enabled: true
+    state: started
