@@ -61,6 +61,15 @@
   when: openclaw_skills | length > 0
   notify: restart openclaw
 
+- name: Ensure skill scripts are executable
+  ansible.builtin.file:
+    path: "{{ openclaw_workspace_dir }}/skills"
+    owner: "{{ openclaw_user }}"
+    group: "{{ openclaw_group }}"
+    mode: "u=rwX,g=rX,o=rX"
+    recurse: true
+  when: openclaw_skills | length > 0
+
 - name: Deploy skill config files
   ansible.builtin.template:
     src: "{{ item.value.template }}"
