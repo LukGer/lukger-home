@@ -18,6 +18,7 @@
     name:
       - ca-certificates
       - curl
+      - golang-go
     state: present
     update_cache: true
 
@@ -79,6 +80,27 @@
     group: "{{ openclaw_group }}"
     mode: '0600'
   notify: restart openclaw
+
+- name: Install blogwatcher binary for OpenClaw user
+  ansible.builtin.shell: |
+    export GOPATH={{ openclaw_home }}/go
+    export PATH=$PATH:{{ openclaw_home }}/go/bin
+    go install github.com/Hyaxia/blogwatcher/cmd/blogwatcher@latest
+  args:
+    creates: "{{ openclaw_home }}/go/bin/blogwatcher"
+  become: true
+  become_user: "{{ openclaw_user }}"
+
+- name: Initialize blogwatcher with xkcd feed
+  ansible.builtin.shell: |
+    export GOPATH={{ openclaw_home }}/go
+    export PATH=$PATH:{{ openclaw_home }}/go/bin
+    {{ openclaw_home }}/go/bin/blogwatcher add "xkcd" https://xkcd.com/rss.xml || true
+    {{ openclaw_home }}/go/bin/blogwatcher scan
+  args:
+    creates: "{{ openclaw_home }}/.blogwatcher/blogwatcher.db"
+  become: true
+  become_user: "{{ openclaw_user }}"
 
 - name: Install systemd unit
   ansible.builtin.template:
