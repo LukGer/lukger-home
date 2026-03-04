@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional
 
 BASE_DIR = Path.home()
-BLOGWATCHER = BASE_DIR / "go" / "bin" / "blogwatcher"
+BLOGWATCHER = Path(os.environ.get("BLOGWATCHER_BIN", "blogwatcher"))
 DB_PATH = BASE_DIR / ".blogwatcher" / "blogwatcher.db"
 IMAGE_DIR = Path(__file__).resolve().parents[1] / "tmp"
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
