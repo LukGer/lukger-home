@@ -30,7 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Ansible
-        run: pip install ansible
+        run: pip install ansible passlib
 
       - name: Install Galaxy roles
         run: ansible-galaxy install -r requirements.yml
