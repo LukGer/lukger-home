@@ -41,6 +41,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Debug SSH agent
+        run: ssh-add -l
+
       - name: Setup SSH known_hosts
         run: |
           mkdir -p ~/.ssh
@@ -62,7 +65,7 @@ jobs:
           EOF
 
       - name: Test SSH
-        run: ssh -o BatchMode=yes -o ConnectTimeout=10 -p 69 lukger@${{ secrets.TAILSCALE_HOST }} "echo OK"
+        run: ssh -vvv -o BatchMode=yes -o ConnectTimeout=10 -p 69 lukger@${{ secrets.TAILSCALE_HOST }} "echo OK"
 
       - name: Run playbook
         env:
