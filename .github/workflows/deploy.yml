@@ -37,13 +37,12 @@ jobs:
         working-directory: infra
 
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add host to known_hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p 69 -H "${{ secrets.TAILSCALE_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Setup vault password
@@ -53,9 +52,10 @@ jobs:
 
       - name: Create CI inventory
         run: |
+          KEY_PATH="$HOME/.ssh/id_ed25519"
           cat > infra/hosts.ci << EOF
           [mona]
-          lukger-home ansible_host=${{ secrets.TAILSCALE_HOST }} ansible_user=lukger ansible_port=69
+          lukger-home ansible_host=${{ secrets.TAILSCALE_HOST }} ansible_user=lukger ansible_port=69 ansible_ssh_private_key_file=$KEY_PATH
 
           [fleet]
           lukger-home
