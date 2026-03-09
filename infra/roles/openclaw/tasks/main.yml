@@ -81,6 +81,15 @@
   when: openclaw_skill_configs | length > 0
   notify: restart openclaw
 
+- name: Install gog CLI for OpenClaw skills
+  ansible.builtin.unarchive:
+    src: "https://github.com/steipete/gogcli/releases/download/{{ openclaw_gog_version }}/gogcli_{{ openclaw_gog_version | replace('v', '') }}_linux_{{ (ansible_architecture == 'x86_64') | ternary('amd64', 'arm64') }}.tar.gz"
+    dest: "{{ openclaw_install_prefix }}/bin"
+    remote_src: true
+    creates: "{{ openclaw_install_prefix }}/bin/gog"
+    extra_opts: [--strip-components=1]
+  notify: restart openclaw
+
 - name: Deploy gog credentials (vault-encrypted file)
   ansible.builtin.copy:
     src: "{{ openclaw_gog_credentials_src }}"

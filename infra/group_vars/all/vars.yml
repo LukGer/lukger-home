@@ -64,6 +64,7 @@ services:
 openclaw_user: openclaw
 openclaw_group: openclaw
 openclaw_home: /home/openclaw
+openclaw_install_prefix: /opt/openclaw
 openclaw_config_dir: "{{ openclaw_home }}/.openclaw"
 openclaw_config_path: "{{ openclaw_config_dir }}/openclaw.json"
 openclaw_state_dir: "{{ openclaw_config_dir }}"
@@ -86,6 +87,8 @@ openclaw_skills_env:
   MEETUP_SCHEDULER_CONFIG: "{{ openclaw_workspace_dir }}/private_config.json"
   GOG_ACCOUNT: "{{ vault_openclaw_gog_account }}"
   GOG_KEYRING_PASSWORD: "{{ vault_openclaw_gog_keyring_password }}"
+  GOG_BIN: "{{ openclaw_install_prefix }}/bin/gog"
+  BLOGWATCHER_BIN: "{{ openclaw_home }}/go/bin/blogwatcher"
 
 # Per-skill config files: path + template (secrets from secret.yml)
 openclaw_skill_configs:

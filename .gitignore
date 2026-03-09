@@ -11,3 +11,5 @@ infra/host_vars/
 mountsraspi
 .fact_cache
 infra/.fact_cache
+infra/.vault_pass
+infra/hosts.ci

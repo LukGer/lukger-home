@@ -7,10 +7,11 @@ Wants=network-online.target
 Type=simple
 User={{ openclaw_user }}
 Group={{ openclaw_group }}
+Environment=HOME={{ openclaw_home }}
 Environment=OPENCLAW_CONFIG_PATH={{ openclaw_config_path }}
 Environment=OPENCLAW_STATE_DIR={{ openclaw_state_dir }}
 Environment=GOPATH={{ openclaw_home }}/go
-Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{{ openclaw_home }}/go/bin
+Environment=PATH={{ openclaw_install_prefix }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{{ openclaw_home }}/go/bin
 {% for k, v in openclaw_skills_env.items() %}
 Environment={{ k }}={{ v }}
 {% endfor %}

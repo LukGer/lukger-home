@@ -9,8 +9,9 @@ TIMEZONE = "Europe/Vienna"
 
 
 def run_gog(from_dt: datetime, to_dt: datetime) -> list[dict]:
+    gog_bin = os.environ.get("GOG_BIN", "gog")
     cmd = [
-        "gog",
+        gog_bin,
         "calendar",
         "events",
         "--all",
