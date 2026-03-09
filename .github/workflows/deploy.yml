@@ -36,6 +36,11 @@ jobs:
         run: ansible-galaxy install -r requirements.yml
         working-directory: infra
 
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Setup SSH known_hosts
         run: |
           mkdir -p ~/.ssh
@@ -56,9 +61,12 @@ jobs:
           lukger-home
           EOF
 
+      - name: Test SSH
+        run: ssh -o BatchMode=yes -o ConnectTimeout=10 -p 69 lukger@${{ secrets.TAILSCALE_HOST }} "echo OK"
+
       - name: Run playbook
         env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
           ANSIBLE_VAULT_PASSWORD_FILE: .vault_pass
-        run: ansible-playbook -i hosts.ci run.yml --private-key <(printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}")
+        run: ansible-playbook -i hosts.ci run.yml
         working-directory: infra
-        shell: bash
