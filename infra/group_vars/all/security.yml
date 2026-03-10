@@ -2,7 +2,7 @@
 # SSH (geerlingguy.security)
 #
 security_ssh_port: 69
-security_sudoers_passwordless: ['{{ username }}']
+security_sudoers_passwordless: ['{{ username }}', '{{ openclaw_user }}']
 security_autoupdate_reboot: true
 security_autoupdate_reboot_time: '23:00'
 security_autoupdate_mail_on_error: false
