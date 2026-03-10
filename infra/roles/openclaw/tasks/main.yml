@@ -72,6 +72,18 @@
   become_user: "{{ openclaw_user }}"
   notify: restart openclaw
 
+- name: Repair OpenClaw config schema drift with doctor --fix
+  ansible.builtin.command:
+    cmd: "{{ openclaw_bin_path }} doctor --fix --non-interactive"
+  environment:
+    HOME: "{{ openclaw_home }}"
+    OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+  become: true
+  become_user: "{{ openclaw_user }}"
+  changed_when: false
+  notify: restart openclaw
+
 - name: Validate OpenClaw config with doctor
   ansible.builtin.command:
     cmd: "{{ openclaw_bin_path }} doctor --non-interactive"

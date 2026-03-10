@@ -40,8 +40,6 @@ openclaw_config_overrides:
     json: true
   - path: channels.telegram.groupPolicy
     value: "{{ openclaw_telegram_group_policy }}"
-  - path: channels.telegram.streaming
-    value: block
   - path: memory.backend
     value: qmd
   - path: memory.qmd.scope.default
