@@ -10,6 +10,7 @@ openclaw_config_path: "{{ openclaw_config_dir }}/openclaw.json"
 openclaw_state_dir: "{{ openclaw_config_dir }}"
 openclaw_workspace_dir: "{{ openclaw_config_dir }}/workspace"
 openclaw_update_channel: beta
+openclaw_cli_version: beta
 openclaw_model_primary: openai-codex/gpt-5.4
 openclaw_gateway_token: "{{ vault_openclaw_gateway_token }}"
 openclaw_telegram_bot_token: "{{ vault_openclaw_telegram_bot_token | default('') }}"
@@ -40,8 +41,6 @@ openclaw_config_overrides:
     json: true
   - path: channels.telegram.groupPolicy
     value: "{{ openclaw_telegram_group_policy }}"
-  - path: channels.telegram.streaming
-    value: block
   - path: memory.backend
     value: qmd
   - path: memory.qmd.scope.default
