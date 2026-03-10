@@ -22,11 +22,26 @@
     state: present
     update_cache: true
 
+- name: Check whether OpenClaw CLI is already installed
+  ansible.builtin.stat:
+    path: "{{ openclaw_bin_path }}"
+  register: stat_openclaw_bin
+
 - name: Install OpenClaw via official installer (bundles Node.js)
   ansible.builtin.shell: |
-    curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash -s -- --prefix {{ openclaw_install_prefix }} --no-onboard
-  args:
-    creates: "{{ openclaw_bin_path }}"
+    curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash -s -- --prefix {{ openclaw_install_prefix }} --version {{ openclaw_cli_version }} --no-onboard
+  when: not stat_openclaw_bin.stat.exists
+
+- name: Update existing OpenClaw CLI to requested version
+  ansible.builtin.command:
+    cmd: "{{ openclaw_bin_path }} update --tag {{ openclaw_cli_version }} --yes --no-restart"
+  environment:
+    HOME: "{{ openclaw_home }}"
+    OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+  when: stat_openclaw_bin.stat.exists
+  changed_when: false
+  notify: restart openclaw
 
 - name: Ensure OpenClaw config and workspace dirs exist
   ansible.builtin.file:
