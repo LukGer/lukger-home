@@ -1,0 +1,20 @@
+#
+# Networking
+# lan: physical NIC, DHCP for host. app: VLAN on lan (id 4), host gets .228, Docker macvlan "app" uses this.
+#
+tailscale_enabled: no
+tailscale_exit_node: no
+networks:
+  - name: lan
+    cidr: 192.168.2.0/24
+    base: 192.168.2
+    interface: enp37s0
+    tailscale: yes
+  - name: app
+    cidr: 10.0.0.0/24
+    base: 10.0.0
+    tailscale: yes
+  - name: iot
+    cidr: 192.168.32.0/24
+    base: 192.168.32
+    tailscale: yes

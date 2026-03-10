@@ -1,0 +1,14 @@
+#
+# Misc
+#
+hostname: '{{ inventory_hostname }}'
+mdns_name: lukger
+mdns_extra_hosts:
+  - homeassistant
+timezone: Europe/Vienna
+ntp_timezone: '{{ timezone }}'
+locale: en_US.UTF-8
+keyboard_layout: de
+username: lukger
+shell: /usr/bin/fish
+guid: 1000

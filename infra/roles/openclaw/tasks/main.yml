@@ -41,14 +41,47 @@
     - "{{ openclaw_workspace_dir }}/skills"
     - "{{ openclaw_home }}/.config/gogcli"
 
-- name: Deploy OpenClaw config
-  ansible.builtin.template:
-    src: openclaw.json.j2
+- name: Stat OpenClaw config for bootstrap check
+  ansible.builtin.stat:
+    path: "{{ openclaw_config_path }}"
+  register: stat_openclaw_config
+  become: true
+  become_user: "{{ openclaw_user }}"
+
+- name: Bootstrap OpenClaw config if missing
+  ansible.builtin.copy:
+    content: '{}'
     dest: "{{ openclaw_config_path }}"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
     mode: '0644'
+  when: not stat_openclaw_config.stat.exists
+
+- name: Apply OpenClaw config overrides via CLI (preserves runtime values)
+  ansible.builtin.shell: |
+    {{ openclaw_bin_path }} config set {{ item.path }} {% if item.get('json') %}{{ item.value | string | lower }}{% else %}{{ item.value | string | quote }}{% endif %}{% if item.get('json') %} --strict-json{% endif %}
+  environment:
+    HOME: "{{ openclaw_home }}"
+    OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+  loop: "{{ openclaw_config_overrides }}"
+  when: >-
+    (item.path != 'channels.telegram.botToken')
+    or (openclaw_telegram_bot_token | default('') | length > 0)
+  become: true
+  become_user: "{{ openclaw_user }}"
   notify: restart openclaw
+
+- name: Validate OpenClaw config with doctor
+  ansible.builtin.command:
+    cmd: "{{ openclaw_bin_path }} doctor --non-interactive"
+  environment:
+    HOME: "{{ openclaw_home }}"
+    OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+  become: true
+  become_user: "{{ openclaw_user }}"
+  changed_when: false
 
 - name: Install custom skills
   ansible.builtin.copy:

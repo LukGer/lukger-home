@@ -22,3 +22,5 @@ openclaw_skills: []
 openclaw_skills_env: {}
 # Per-skill config files: skill_name -> { path, template }
 openclaw_skill_configs: {}
+# Config keys applied via `openclaw config set` (define in group_vars)
+openclaw_config_overrides: []

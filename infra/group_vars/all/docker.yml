@@ -1,0 +1,7 @@
+#
+# Docker apps
+#
+docker_dir: /opt/docker/data
+docker_compose_dir: /opt/docker/compose
+services:
+  - homeassistant

@@ -3,13 +3,7 @@
 /files/fonts/*
 .DS_Store
 infra/hosts
-infra/group_vars/*
-!infra/group_vars/all/
-infra/group_vars/all/*
-!infra/group_vars/all/secret.yml
 infra/host_vars/
-!infra/host_vars/.gitkeep
-!infra/group_vars/all/vars.yml
 mountsraspi
 .fact_cache
 infra/.fact_cache

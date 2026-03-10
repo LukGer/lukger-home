@@ -1,0 +1,19 @@
+#
+# Packages
+#
+extra_packages:
+  - fish
+  - iperf3
+  - speedtest-cli
+  - htop
+  - stow
+  - eza
+  - git
+  - neofetch
+  - neovim
+  - tmux
+  - mosh
+  - rsync
+  - lm-sensors
+  - iotop
+  - ncdu
