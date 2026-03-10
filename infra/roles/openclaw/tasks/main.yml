@@ -10,8 +10,14 @@
     group: "{{ openclaw_group }}"
     home: "{{ openclaw_home }}"
     create_home: true
-    shell: /usr/sbin/nologin
+    shell: "{{ openclaw_shell | default('/bin/bash') }}"
     system: true
+
+- name: Set openclaw password
+  ansible.builtin.user:
+    name: "{{ openclaw_user }}"
+    password: "{{ vault_openclaw_password | password_hash('sha512') }}"
+  when: vault_openclaw_password is defined
 
 - name: Install prerequisites
   ansible.builtin.apt:
@@ -74,15 +80,21 @@
 
 - name: Apply OpenClaw config overrides via CLI (preserves runtime values)
   ansible.builtin.shell: |
-    {{ openclaw_bin_path }} config set {{ item.path }} {% if item.get('json') %}{{ item.value | string | lower }}{% else %}{{ item.value | string | quote }}{% endif %}{% if item.get('json') %} --strict-json{% endif %}
+    {{ openclaw_bin_path }} config set {{ item.path }} {% if item.get('json_array') %}{{ item.value | to_json | quote }}{% elif item.get('json') %}{{ item.value | string | lower }}{% else %}{{ item.value | string | quote }}{% endif %}{% if item.get('json') or item.get('json_array') %} --strict-json{% endif %}
   environment:
     HOME: "{{ openclaw_home }}"
     OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
     PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   loop: "{{ openclaw_config_overrides }}"
   when: >-
-    (item.path != 'channels.telegram.botToken')
-    or (openclaw_telegram_bot_token | default('') | length > 0)
+    (
+      (item.path != 'channels.telegram.botToken')
+      or (openclaw_telegram_bot_token | default('') | length > 0)
+    )
+    and (
+      (item.path != 'channels.telegram.groupAllowFrom')
+      or (openclaw_telegram_group_allow_from | default([]) | length > 0)
+    )
   become: true
   become_user: "{{ openclaw_user }}"
   notify: restart openclaw

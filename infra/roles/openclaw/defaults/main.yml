@@ -1,6 +1,7 @@
 ---
 openclaw_user: openclaw
 openclaw_group: openclaw
+openclaw_shell: /usr/bin/fish
 openclaw_home: /home/openclaw
 openclaw_config_dir: "{{ openclaw_home }}/.openclaw"
 openclaw_config_path: "{{ openclaw_config_dir }}/openclaw.json"
@@ -16,6 +17,7 @@ openclaw_gog_version: v0.12.0
 openclaw_model_primary: openai-codex/gpt-5.2-codex
 openclaw_gateway_token: ""
 openclaw_telegram_bot_token: ""
+openclaw_telegram_group_allow_from: []
 # Skills
 openclaw_skills_src_dir: "{{ playbook_dir }}/../skills"
 openclaw_skills: []
