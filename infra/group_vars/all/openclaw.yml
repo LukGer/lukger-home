@@ -16,11 +16,10 @@ openclaw_cli_version: beta
 openclaw_model_primary: openai-codex/gpt-5.4
 openclaw_gateway_token: "{{ vault_openclaw_gateway_token }}"
 openclaw_telegram_bot_token: "{{ vault_openclaw_telegram_bot_token | default('') }}"
-# allowlist (recommended) | open. With allowlist, groupAllowFrom may contain approved group chat IDs.
+# allowlist (recommended) | open. groupAllowFrom should be populated from vault-managed IDs.
 openclaw_telegram_group_policy: allowlist
-# Telegram group chat IDs that may message OpenClaw without mentions.
-openclaw_telegram_group_allow_from:
-  - "-5142684566" # Home Server
+# Telegram user or group chat IDs allowed in groups. Add these in secret.yml as vault_openclaw_telegram_group_allow_from.
+openclaw_telegram_group_allow_from: "{{ vault_openclaw_telegram_group_allow_from | default([]) }}"
 openclaw_telegram_require_mention_in_groups: false
 openclaw_gateway_manage_via_sudo: true
 
