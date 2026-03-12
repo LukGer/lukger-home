@@ -16,10 +16,13 @@ openclaw_cli_version: beta
 openclaw_model_primary: openai-codex/gpt-5.4
 openclaw_gateway_token: "{{ vault_openclaw_gateway_token }}"
 openclaw_telegram_bot_token: "{{ vault_openclaw_telegram_bot_token | default('') }}"
-# allowlist (recommended) | open. allowlist requires groupAllowFrom with your Telegram user ID(s).
+# allowlist (recommended) | open. With allowlist, groupAllowFrom may contain approved group chat IDs.
 openclaw_telegram_group_policy: allowlist
-# Telegram user IDs allowed in groups (get from @userinfobot). Add to secret.yml as vault_openclaw_telegram_group_allow_from.
-openclaw_telegram_group_allow_from: "{{ vault_openclaw_telegram_group_allow_from | default([]) }}"
+# Telegram group chat IDs that may message OpenClaw without mentions.
+openclaw_telegram_group_allow_from:
+  - "-5142684566" # Home Server
+openclaw_telegram_require_mention_in_groups: false
+openclaw_gateway_manage_via_sudo: true
 
 # Config keys managed via `openclaw config set` (merges into existing, preserves runtime values like pairing/allowlist).
 # Omit paths that OpenClaw writes at runtime (e.g. channels.telegram.groups).
@@ -48,6 +51,9 @@ openclaw_config_overrides:
   - path: channels.telegram.groupAllowFrom
     value: "{{ openclaw_telegram_group_allow_from }}"
     json_array: true
+  - path: channels.telegram.groups.*.requireMention
+    value: "{{ openclaw_telegram_require_mention_in_groups }}"
+    json: true
   - path: memory.backend
     value: qmd
   - path: memory.qmd.scope.default

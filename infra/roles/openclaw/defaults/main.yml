@@ -18,6 +18,11 @@ openclaw_model_primary: openai-codex/gpt-5.2-codex
 openclaw_gateway_token: ""
 openclaw_telegram_bot_token: ""
 openclaw_telegram_group_allow_from: []
+openclaw_telegram_require_mention_in_groups: false
+openclaw_gateway_manage_via_sudo: true
+openclaw_gateway_systemctl_paths:
+  - /bin/systemctl
+  - /usr/bin/systemctl
 # Skills
 openclaw_skills_src_dir: "{{ playbook_dir }}/../skills"
 openclaw_skills: []
