@@ -199,6 +199,16 @@
     mode: '0644'
   notify: reload systemd
 
+- name: Allow OpenClaw user to manage its systemd unit via sudo
+  ansible.builtin.template:
+    src: openclaw-gateway-sudoers.j2
+    dest: /etc/sudoers.d/openclaw-gateway
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+  when: openclaw_gateway_manage_via_sudo | bool
+
 - name: Enable and start OpenClaw
   ansible.builtin.systemd:
     name: openclaw-gateway

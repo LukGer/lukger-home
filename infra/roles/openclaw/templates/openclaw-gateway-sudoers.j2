@@ -1,0 +1,5 @@
+# Managed by Ansible (role: openclaw)
+# Allow the OpenClaw service user to manage only its own gateway unit.
+{% for systemctl_path in openclaw_gateway_systemctl_paths %}
+{{ openclaw_user }} ALL=(root) NOPASSWD: {{ systemctl_path }} restart openclaw-gateway.service, {{ systemctl_path }} status openclaw-gateway.service, {{ systemctl_path }} start openclaw-gateway.service, {{ systemctl_path }} stop openclaw-gateway.service
+{% endfor %}
