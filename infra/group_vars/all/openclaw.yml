@@ -20,9 +20,14 @@ openclaw_telegram_bot_token: "{{ vault_openclaw_telegram_bot_token | default('')
 openclaw_telegram_group_policy: allowlist
 # Telegram sender user IDs allowed to trigger OpenClaw in groups.
 openclaw_telegram_group_allow_from: "{{ vault_openclaw_telegram_group_allow_from | default([]) }}"
-# Telegram groups/supergroups allowed to message OpenClaw. Configure negative chat IDs in
-# vault_openclaw_telegram_groups, e.g. {"-5142684566": {"requireMention": false}}
-openclaw_telegram_groups: "{{ vault_openclaw_telegram_groups | default({}) }}"
+# Telegram groups/supergroups allowed to message OpenClaw.
+# Home Server is intentionally always-on for allowed senders (no @mention required).
+# Additional groups can still be layered in via vault_openclaw_telegram_groups.
+openclaw_telegram_groups: >-
+  {{
+    {'-5142684566': {'requireMention': false}}
+    | combine(vault_openclaw_telegram_groups | default({}), recursive=True)
+  }}
 openclaw_gateway_manage_via_sudo: true
 
 # Config keys managed via `openclaw config set` (merges into existing, preserves runtime values like pairing/allowlist).
