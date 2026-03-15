@@ -162,13 +162,22 @@
     extra_opts: [--strip-components=1]
   notify: restart openclaw
 
-- name: Deploy gog credentials (vault-encrypted file)
+- name: Stage gog OAuth client secret (vault-encrypted file)
   ansible.builtin.copy:
     src: "{{ openclaw_gog_credentials_src }}"
-    dest: "{{ openclaw_home }}/.config/gogcli/credentials.json"
+    dest: "{{ openclaw_home }}/.config/gogcli/client_secret.json"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
     mode: '0600'
+
+- name: Import gog OAuth client credentials into gogcli store
+  ansible.builtin.command:
+    cmd: "{{ openclaw_install_prefix }}/bin/gog auth credentials set {{ openclaw_home }}/.config/gogcli/client_secret.json --force"
+  environment:
+    HOME: "{{ openclaw_home }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+  become: true
+  become_user: "{{ openclaw_user }}"
   notify: restart openclaw
 
 - name: Install blogwatcher binary for OpenClaw user
