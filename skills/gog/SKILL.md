@@ -11,7 +11,7 @@ Use `gog` for Gmail/Calendar/Drive/Contacts/Sheets/Docs. Requires OAuth setup.
 
 ## Configuration
 
-Store `client_secret.json` in `infra/auth/`, run `ansible-vault encrypt infra/auth/client_secret.json`, then Ansible deploys it to `~/.config/gogcli/credentials.json`. Vault vars `vault_openclaw_gog_account` and `vault_openclaw_gog_keyring_password` set env for the gateway. Run `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs --manual --force-consent` once on the host.
+Store `client_secret.json` in `infra/auth/`, run `ansible-vault encrypt infra/auth/client_secret.json`, then Ansible stages it on-host and imports it with `gog auth credentials set ...` so gogcli writes its own normalized `~/.config/gogcli/credentials.json`. Vault vars `vault_openclaw_gog_account` and `vault_openclaw_gog_keyring_password` set env for the gateway. Run `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs --manual --force-consent` once on the host.
 
 ## Setup (once)
 - `gog auth credentials /path/to/client_secret.json`
