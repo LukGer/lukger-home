@@ -44,7 +44,7 @@
   environment:
     HOME: "{{ openclaw_home }}"
     OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
-    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ (ansible_facts['env'] | default({})).PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   when: stat_openclaw_bin.stat.exists
   changed_when: false
   notify: restart openclaw
@@ -55,7 +55,7 @@
     state: directory
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
-    mode: '0755'
+    mode: "0755"
   loop:
     - "{{ openclaw_config_dir }}"
     - "{{ openclaw_workspace_dir }}"
@@ -71,11 +71,11 @@
 
 - name: Bootstrap OpenClaw config if missing
   ansible.builtin.copy:
-    content: '{}'
+    content: "{}"
     dest: "{{ openclaw_config_path }}"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
-    mode: '0644'
+    mode: "0644"
   when: not stat_openclaw_config.stat.exists
 
 - name: Apply OpenClaw config overrides via CLI (preserves runtime values)
@@ -84,7 +84,7 @@
   environment:
     HOME: "{{ openclaw_home }}"
     OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
-    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ (ansible_facts['env'] | default({})).PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   loop: "{{ openclaw_config_overrides }}"
   when: >-
     (
@@ -105,7 +105,7 @@
   environment:
     HOME: "{{ openclaw_home }}"
     OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
-    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ (ansible_facts['env'] | default({})).PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   become: true
   become_user: "{{ openclaw_user }}"
   changed_when: false
@@ -117,7 +117,7 @@
   environment:
     HOME: "{{ openclaw_home }}"
     OPENCLAW_CONFIG_PATH: "{{ openclaw_config_path }}"
-    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ (ansible_facts['env'] | default({})).PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   become: true
   become_user: "{{ openclaw_user }}"
   changed_when: false
@@ -128,7 +128,7 @@
     dest: "{{ openclaw_workspace_dir }}/skills/{{ item }}"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
-    mode: '0755'
+    mode: "0755"
   loop: "{{ openclaw_skills }}"
   when: openclaw_skills | length > 0
   notify: restart openclaw
@@ -148,7 +148,7 @@
     dest: "{{ item.value.path }}"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
-    mode: '0600'
+    mode: "0600"
   loop: "{{ openclaw_skill_configs | dict2items }}"
   when: openclaw_skill_configs | length > 0
   notify: restart openclaw
@@ -159,7 +159,6 @@
     dest: "{{ openclaw_install_prefix }}/bin"
     remote_src: true
     creates: "{{ openclaw_install_prefix }}/bin/gog"
-    extra_opts: [--strip-components=1]
   notify: restart openclaw
 
 - name: Stage gog OAuth client secret (vault-encrypted file)
@@ -168,14 +167,14 @@
     dest: "{{ openclaw_home }}/.config/gogcli/client_secret.json"
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
-    mode: '0600'
+    mode: "0600"
 
 - name: Import gog OAuth client credentials into gogcli store
   ansible.builtin.command:
     cmd: "{{ openclaw_install_prefix }}/bin/gog auth credentials set {{ openclaw_home }}/.config/gogcli/client_secret.json --force"
   environment:
     HOME: "{{ openclaw_home }}"
-    PATH: "{{ openclaw_install_prefix }}/bin:{{ ansible_env.PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
+    PATH: "{{ openclaw_install_prefix }}/bin:{{ (ansible_facts['env'] | default({})).PATH | default('/usr/local/bin:/usr/bin:/bin') }}"
   become: true
   become_user: "{{ openclaw_user }}"
   notify: restart openclaw
@@ -205,7 +204,7 @@
   ansible.builtin.template:
     src: openclaw-gateway.service.j2
     dest: /etc/systemd/system/openclaw-gateway.service
-    mode: '0644'
+    mode: "0644"
   notify: reload systemd
 
 - name: Allow OpenClaw user to manage its systemd unit via sudo
@@ -214,8 +213,8 @@
     dest: /etc/sudoers.d/openclaw-gateway
     owner: root
     group: root
-    mode: '0440'
-    validate: '/usr/sbin/visudo -cf %s'
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
   when: openclaw_gateway_manage_via_sudo | bool
 
 - name: Enable and start OpenClaw
