@@ -7,34 +7,44 @@ metadata: {"clawdbot":{"emoji":"🎮","requires":{"bins":["gog"]},"install":[{"i
 
 # gog
 
-Use `gog` for Gmail/Calendar/Drive/Contacts/Sheets/Docs. Requires OAuth setup.
+Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs.
+
+**IMPORTANT — always pass `--no-input` to every `gog` command.** The agent runs
+headless; interactive prompts will hang. `GOG_ACCOUNT`, `GOG_KEYRING_PASSWORD`,
+and `GOG_KEYRING_BACKEND=file` are pre-set in the environment — never prompt the
+user for them.
 
 ## Configuration
 
-Store `client_secret.json` in `infra/auth/`, run `ansible-vault encrypt infra/auth/client_secret.json`, then Ansible stages it on-host and imports it with `gog auth credentials set ...` so gogcli writes its own normalized `~/.config/gogcli/credentials.json`. Vault vars `vault_openclaw_gog_account` and `vault_openclaw_gog_keyring_password` set env for the gateway. Run `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs --manual --force-consent` once on the host.
+OAuth credentials and keyring are provisioned by Ansible. Manual setup (once on host):
 
-## Setup (once)
-- `gog auth credentials /path/to/client_secret.json`
-- `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs`
-- `gog auth list`
+```
+gog auth keyring file
+gog auth credentials set /path/to/client_secret.json --force
+gog auth add you@gmail.com --services gmail,calendar,drive,contacts,sheets,docs --manual --force-consent
+```
 
-Common commands
-- Gmail search: `gog gmail search 'newer_than:7d' --max 10`
-- Gmail send: `gog gmail send --to a@b.com --subject "Hi" --body "Hello"`
-- Calendar: `gog calendar events <calendarId> --from <iso> --to <iso>`
-- Drive search: `gog drive search "query" --max 10`
-- Contacts: `gog contacts list --max 20`
-- Sheets get: `gog sheets get <sheetId> "Tab!A1:D10" --json`
-- Sheets update: `gog sheets update <sheetId> "Tab!A1:B2" --values-json '[["A","B"],["1","2"]]' --input USER_ENTERED`
-- Sheets append: `gog sheets append <sheetId> "Tab!A:C" --values-json '[["x","y","z"]]' --insert INSERT_ROWS`
-- Sheets clear: `gog sheets clear <sheetId> "Tab!A2:Z"`
-- Sheets metadata: `gog sheets metadata <sheetId> --json`
-- Docs export: `gog docs export <docId> --format txt --out /tmp/doc.txt`
-- Docs cat: `gog docs cat <docId>`
+## Commands
 
-Notes
-- Set `GOG_ACCOUNT=you@gmail.com` to avoid repeating `--account`.
-- For scripting, prefer `--json` plus `--no-input`.
-- Sheets values can be passed via `--values-json` (recommended) or as inline rows.
-- Docs supports export/cat/copy. In-place edits require a Docs API client (not in gog).
-- Confirm before sending mail or creating events.
+All examples below include `--no-input`. Always use it.
+
+- Gmail search: `gog gmail search 'newer_than:7d' --max 10 --no-input`
+- Gmail send: `gog gmail send --to a@b.com --subject "Hi" --body "Hello" --no-input`
+- Calendar: `gog calendar events <calendarId> --from <iso> --to <iso> --no-input`
+- Drive search: `gog drive search "query" --max 10 --no-input`
+- Contacts: `gog contacts list --max 20 --no-input`
+- Sheets get: `gog sheets get <sheetId> "Tab!A1:D10" --json --no-input`
+- Sheets update: `gog sheets update <sheetId> "Tab!A1:B2" --values-json '[["A","B"],["1","2"]]' --input USER_ENTERED --no-input`
+- Sheets append: `gog sheets append <sheetId> "Tab!A:C" --values-json '[["x","y","z"]]' --insert INSERT_ROWS --no-input`
+- Sheets clear: `gog sheets clear <sheetId> "Tab!A2:Z" --no-input`
+- Sheets metadata: `gog sheets metadata <sheetId> --json --no-input`
+- Docs export: `gog docs export <docId> --format txt --out /tmp/doc.txt --no-input`
+- Docs cat: `gog docs cat <docId> --no-input`
+
+## Notes
+
+- `GOG_ACCOUNT` is set — no need for `--account`.
+- Prefer `--json` for machine-readable output.
+- Sheets values: use `--values-json` (recommended) or inline rows.
+- Docs: export/cat/copy only. In-place edits need a Docs API client.
+- Confirm with the user before sending mail or creating events.

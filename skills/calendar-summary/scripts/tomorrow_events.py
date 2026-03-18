@@ -24,6 +24,7 @@ def run_gog(from_dt: datetime, to_dt: datetime) -> list[dict]:
         "--max",
         "200",
         "--json",
+        "--no-input",
     ]
     env = os.environ.copy()
     result = subprocess.run(cmd, capture_output=True, text=True, env=env)

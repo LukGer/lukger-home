@@ -1,0 +1,6 @@
+fish_add_path --prepend {{ openclaw_install_prefix }}/bin
+fish_add_path {{ openclaw_home }}/go/bin
+
+set -gx GOG_KEYRING_BACKEND file
+set -gx GOG_KEYRING_PASSWORD "{{ vault_openclaw_gog_keyring_password }}"
+set -gx GOG_ACCOUNT "{{ vault_openclaw_gog_account }}"

@@ -89,6 +89,7 @@ openclaw_skills_env:
   GOG_ACCOUNT: "{{ vault_openclaw_gog_account }}"
   GOG_KEYRING_PASSWORD: "{{ vault_openclaw_gog_keyring_password }}"
   GOG_BIN: "{{ openclaw_install_prefix }}/bin/gog"
+  GOG_KEYRING_BACKEND: file
   BLOGWATCHER_BIN: "{{ openclaw_home }}/go/bin/blogwatcher"
 openclaw_skill_configs:
   meetup-scheduler:
