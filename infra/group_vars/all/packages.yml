@@ -14,6 +14,7 @@ extra_packages:
   - tmux
   - mosh
   - rsync
+  - openjdk-25-jdk-headless
   - lm-sensors
   - iotop
   - ncdu
