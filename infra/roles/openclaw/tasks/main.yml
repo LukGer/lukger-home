@@ -28,12 +28,14 @@
     owner: "{{ openclaw_user }}"
     group: "{{ openclaw_group }}"
     mode: "0644"
+  no_log: true
 
 - name: Set openclaw password
   ansible.builtin.user:
     name: "{{ openclaw_user }}"
     password: "{{ vault_openclaw_password | password_hash('sha512') }}"
   when: vault_openclaw_password is defined
+  no_log: true
 
 - name: Install prerequisites
   ansible.builtin.apt:
@@ -113,6 +115,7 @@
     )
   become: true
   become_user: "{{ openclaw_user }}"
+  no_log: true
   notify: restart openclaw
 
 - name: Repair OpenClaw config schema drift with doctor --fix
@@ -187,6 +190,7 @@
   become: true
   become_user: "{{ openclaw_user }}"
   changed_when: true
+  no_log: true
 
 - name: Stage gog OAuth client secret (vault-encrypted file)
   ansible.builtin.copy:
@@ -206,6 +210,7 @@
     GOG_KEYRING_BACKEND: file
   become: true
   become_user: "{{ openclaw_user }}"
+  no_log: true
   notify: restart openclaw
 
 - name: Install blogwatcher binary for OpenClaw user
@@ -234,6 +239,7 @@
     src: openclaw-gateway.service.j2
     dest: /etc/systemd/system/openclaw-gateway.service
     mode: "0644"
+  no_log: true
   notify: reload systemd
 
 - name: Allow OpenClaw user to manage its systemd unit via sudo
